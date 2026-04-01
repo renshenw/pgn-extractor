@@ -1,13 +1,17 @@
 {
   "manifest_version": 3,
   "name": "PGN Extractor",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Extracts PGN from lichess.",
   "permissions": [
     "activeTab",
     "scripting"
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icon128.png"
+  },
+  "icons": {
+    "128": "icon128.png"
   }
 }
