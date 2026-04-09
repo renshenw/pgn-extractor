@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
               return; // Skip entire branch subtree
             }
             if (node.tagName === 'MOVE') {
-              const txt = node.textContent.trim();
+              const sanNode = node.querySelector('san');
+              const txt = sanNode ? sanNode.textContent.trim() : '';
               if (txt && txt !== '...') {
                 texts.push(txt);
               }
