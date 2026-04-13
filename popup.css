@@ -225,3 +225,46 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+.hidden {
+  display: none !important;
+}
+
+.options-panel {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-selector-row {
+  display: flex;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mini-btn {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.8rem !important;
+  border-radius: 0.5rem !important;
+}
+
+.file-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
