@@ -5,6 +5,58 @@ document.addEventListener('DOMContentLoaded', () => {
   let counter = parseInt(localStorage.getItem('puzzle_counter') || '1');
 
   const keepMovesCheckbox = document.getElementById('keepMovesCheckbox');
+  
+  const appendToFileCheckbox = document.getElementById('appendToFileCheckbox');
+  const fileSelectorContainer = document.getElementById('fileSelectorContainer');
+  const selectFileBtn = document.getElementById('selectFileBtn');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+  let fileHandle = null;
+
+  // Load saved file handle
+  getFileHandle().then(handle => {
+    if (handle) {
+      fileHandle = handle;
+      if (fileNameDisplay) fileNameDisplay.textContent = handle.name;
+    }
+  });
+
+  if (appendToFileCheckbox) {
+    appendToFileCheckbox.checked = localStorage.getItem('appendToFile') === 'true';
+    toggleFileSelector(appendToFileCheckbox.checked);
+
+    appendToFileCheckbox.addEventListener('change', () => {
+      localStorage.setItem('appendToFile', appendToFileCheckbox.checked);
+      toggleFileSelector(appendToFileCheckbox.checked);
+    });
+  }
+
+  function toggleFileSelector(show) {
+    if (!fileSelectorContainer) return;
+    if (show) {
+      fileSelectorContainer.classList.remove('hidden');
+    } else {
+      fileSelectorContainer.classList.add('hidden');
+    }
+  }
+
+  if (selectFileBtn) {
+    selectFileBtn.addEventListener('click', async () => {
+      try {
+        fileHandle = await window.showSaveFilePicker({
+          suggestedName: 'games.pgn',
+          types: [{
+            description: 'PGN Files',
+            accept: { 'text/plain': ['.pgn', '.txt'] },
+          }],
+        });
+        fileNameDisplay.textContent = fileHandle.name;
+        await saveFileHandle(fileHandle);
+      } catch (err) {
+        console.error('Error selecting file:', err);
+      }
+    });
+  }
   if (keepMovesCheckbox) {
     keepMovesCheckbox.checked = localStorage.getItem('keepMoves') === 'true';
     keepMovesCheckbox.addEventListener('change', () => {
@@ -119,7 +171,35 @@ document.addEventListener('DOMContentLoaded', () => {
             finalOutput += '\n\n';
           }
 
-          titleOutput.value = finalOutput;
+          if (appendToFileCheckbox && appendToFileCheckbox.checked) {
+            if (fileHandle) {
+              try {
+                // Check permission (required for handles restored from IndexedDB)
+                const permission = await fileHandle.queryPermission({ mode: 'readwrite' });
+                if (permission !== 'granted') {
+                  const request = await fileHandle.requestPermission({ mode: 'readwrite' });
+                  if (request !== 'granted') {
+                    titleOutput.value = 'Permission denied to write to file.';
+                    return;
+                  }
+                }
+                
+                const writable = await fileHandle.createWritable({ keepExistingData: true });
+                const file = await fileHandle.getFile();
+                await writable.seek(file.size);
+                await writable.write(finalOutput);
+                await writable.close();
+                titleOutput.value = `PGN appended to ${fileHandle.name}`;
+              } catch (fileError) {
+                console.error('Failed to write to file:', fileError);
+                titleOutput.value = 'Error writing to file: ' + fileError.message;
+              }
+            } else {
+              titleOutput.value = 'Please select a file first.';
+            }
+          } else {
+            titleOutput.value = finalOutput;
+          }
 
           // Increment and save counter
           counter++;
@@ -164,3 +244,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// IndexedDB helper to store file handle
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('PgnExtractorDB', 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      db.createObjectStore('handles');
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function saveFileHandle(handle) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readwrite');
+    const store = tx.objectStore('handles');
+    const request = store.put(handle, 'pgnFile');
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function getFileHandle() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readonly');
+    const store = tx.objectStore('handles');
+    const request = store.get('pgnFile');
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
