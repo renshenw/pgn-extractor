@@ -15,12 +15,27 @@
         </header>
 
         <main>
-            <div class="toggle-container">
-                <span class="toggle-label">Keep all the moves</span>
-                <label class="switch">
-                    <input type="checkbox" id="keepMovesCheckbox">
-                    <span class="slider round"></span>
-                </label>
+            <div class="options-panel">
+                <div class="option-row">
+                    <span class="toggle-label">Keep all the moves</span>
+                    <label class="switch">
+                        <input type="checkbox" id="keepMovesCheckbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="option-row">
+                    <span class="toggle-label">Append to file</span>
+                    <label class="switch">
+                        <input type="checkbox" id="appendToFileCheckbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div id="fileSelectorContainer" class="file-selector-row hidden">
+                    <button id="selectFileBtn" class="secondary-btn mini-btn">Select File</button>
+                    <span id="fileNameDisplay" class="file-name">No file selected</span>
+                </div>
             </div>
 
             <div class="actions-container">
